@@ -1,4 +1,5 @@
 #include "NeuralC.h"
+#define PARALELISMO_ATIVADO 1
 
 void exibir_neuronio(Network *network)
 {
@@ -11,9 +12,8 @@ void exibir_neuronio(Network *network)
 
     for (int i = 0; i < network->quant_layers; i++)
     {
-       
+
         printf("\n____________________Camada %d______________________\n\n", i + 1);
-        
 
         for (int j = 0; j < network->layers[i]->quant_neuronios; j++)
         {
@@ -32,17 +32,31 @@ void exibir_neuronio(Network *network)
 
 int main()
 {
+    // Treinar rede neural para aprender a porta XOR
     srand(time(NULL));
     Network *net = NULL;
-    int topologia[] = {2, 3, 2, 1};
+    int topologia[] = {2, 10, 1};   // 2 entradas, 3 neuronios na camada oculta e 1 neuronio na camada de saída
+    float target[] = {0.0, 1.0, 1.0, 0.0}; // saidas esperadas
+    float taxa_aprendizado = 0.1f;
+    float dados[4][2] = {
+        {0, 0},
+        {0, 1},
+        {1, 0},
+        {1, 1}};
 
-    net = create_network(3, topologia);
+    float *entrada_treinamento[4];
 
-    exibir_neuronio(net);
+    for (int i = 0; i < 4; i++)
+        entrada_treinamento[i] = dados[i];
 
-    forward((float[]){1.0, 0.0}, net);
+    net = create_network(2, topologia);
 
-    printf("Saida: %f\n", net->layers[net->quant_layers - 1]->neuron[net->layers[net->quant_layers - 1]->quant_neuronios -1]->saida);
+    definir_paralelismo(PARALELISMO_ATIVADO);
+    backpropagation(net, entrada_treinamento, target, 4, taxa_aprendizado, 10000);
 
+    forward((float[]){0.0, 0.0}, net);
+    printf("Saida: %f\n", net->layers[net->quant_layers - 1]->neuron[net->layers[net->quant_layers - 1]->quant_neuronios - 1]->saida);
+
+    destroy_network(net);
     return 0;
 }
